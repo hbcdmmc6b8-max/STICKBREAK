@@ -234,32 +234,4 @@ if(hit){
 }
 for(let p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.12*dt;p.life-=dt;ctx.fillStyle=opts.coins;ctx.globalAlpha=Math.min(1,p.life/15);ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()}particles=particles.filter(p=>p.life>0);ctx.globalAlpha=1;ctx.font='bold 16px system-ui';ctx.fillStyle='#c89000';for(let f of floaters){f.y-=.65*dt;f.life-=dt;ctx.globalAlpha=Math.min(1,f.life/20);ctx.fillText(f.text,f.x-15,f.y)}floaters=floaters.filter(f=>f.life>0);ctx.restore();requestAnimationFrame(draw)}requestAnimationFrame(draw);
 $('config').onclick=()=>{$('settings').style.display='block'};$('close').onclick=()=>{$('settings').style.display='none'};const colors=$('colors');for(let [k,v] of Object.entries(defaults))colors.innerHTML+='<label>'+k+' <input type="color" id="color-'+k+'" value="'+(opts[k]||v)+'"></label>';function sync(){for(let k of ['mult','maxhp','shake'])$(k).value=opts[k];for(let k of Object.keys(defaults))$('color-'+k).value=opts[k]}sync();$('save').onclick=()=>{let old=opts.maxhp;for(let k of ['mult','maxhp','shake'])opts[k]=Math.max(k==='shake'?0:1,Number($(k).value)||1);for(let k of Object.keys(defaults))opts[k]=$('color-'+k).value;if(old!==opts.maxhp&&bossIndex===0){bosses[0][1]=opts.maxhp;hp=opts.maxhp};$('settings').style.display='none';refresh();persist()};refresh();
-</script></body></html>,0,.5);c.restore()}})}
-function draw(t){let dt=Math.min(2,(t-last)/16.67);last=t;velocity-=tilt*.08*dt;velocity*=Math.pow(.84,dt);tilt+=velocity*dt;tilt=Math.max(-1.4,Math.min(1.4,tilt));let big=weapons[equipped][3]>=1200,hit=t-hitTime<300,bob=Math.sin(t/470)*3,ko=hp<=0;ctx.save();ctx.clearRect(0,0,W,H);ctx.fillStyle=opts.room;ctx.fillRect(0,0,W,H);let wall=ctx.createLinearGradient(0,0,0,H);wall.addColorStop(0,opts.room||'#fafafa');wall.addColorStop(.65,'#fafafa');wall.addColorStop(1,'#ededed');ctx.fillStyle=wall;ctx.fillRect(0,0,W,H);let floor=H*.88;line(0,floor,W,floor,1.5,'#ddd');line(W*.34,H,0,0,1,'#e2e2e2');line(W*.66,H,W,0,1,'#e2e2e2');ctx.fillStyle='#00000020';ctx.beginPath();ctx.ellipse(W/2,floor,45*Math.min(1.65,Math.max(.78,H/330)),9,0,0,Math.PI*2);ctx.fill();ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);shake*=.82;let scale=Math.min(1.45,Math.max(.85,H/350)),cx=W/2,cy=floor-78*scale+bob;ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);ctx.rotate(ko?Math.PI/2:tilt*.65);let arm=Math.sin(t/230)*.12+(hit?Math.sin(Math.min(1,(t-hitTime)/300)*Math.PI)*.18:0);line(0,-30,0,25,6);line(0,-20,-29,5+arm*16,5);line(0,-20,29,5-arm*16,5);line(0,25,-25,72,5);line(0,25,25,72,5);ctx.fillStyle='#fff';ctx.strokeStyle=bossIndex?bosses[bossIndex][2]:opts.stickman;ctx.lineWidth=7;ctx.beginPath();ctx.arc(0,-53,23,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=bossIndex?bosses[bossIndex][2]:opts.stickman;if(hit&&big){line(-12,-58,-5,-51,2);line(-5,-58,-12,-51,2);line(5,-58,12,-51,2);line(12,-58,5,-51,2)}else{ctx.beginPath();ctx.arc(-8,-55,2.8,0,7);ctx.arc(8,-55,2.8,0,7);ctx.fill()}if(ko){ctx.fillStyle=opts.starburst;for(let i=0;i<3;i++){let a=t/300+i*2.1,x=Math.cos(a)*35,y=-60+Math.sin(a)*18;ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.beginPath();for(let j=0;j<10;j++){let q=j*Math.PI/5,r=j%2?4:9;ctx.lineTo(Math.cos(q)*r,Math.sin(q)*r)}ctx.closePath();ctx.fill();ctx.restore()}}ctx.restore();
-if(hit){
- const progress=Math.min(1,(t-hitTime)/300),approach=Math.min(1,progress/.43),ease=1-Math.pow(1-approach,3);
- const retract=progress>.62?Math.pow((progress-.62)/.38,1.5):0;
- const contactX=side*47, startX=side*(Math.min(W/(2*scale)-18,126));
- const weaponX=startX+(contactX-startX)*ease+side*49*retract;
- const weaponY=-7-5*Math.sin(progress*Math.PI);
- // All weapons are held outside the character silhouette; the striking tip reaches the torso edge.
- const impact=progress>=.38&&progress<=.60;
- if(impact){
-  ctx.save();ctx.translate(cx+side*16*scale,cy-7*scale);
-  ctx.globalAlpha=Math.max(0,1-Math.abs(progress-.45)/.18);
-  ctx.fillStyle=opts.starburst;ctx.beginPath();
-  let n=9,R=(13+Math.log10(weapons[equipped][3]+1)*2.8)*scale;
-  for(let j=0;j<n*2;j++){let a=j*Math.PI/n,r=j%2?R*.48:R;ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r)}
-  ctx.closePath();ctx.fill();ctx.restore();
- }
- ctx.save();ctx.translate(cx,cy);ctx.scale(scale,scale);
- ctx.translate(weaponX,weaponY);
- // Swing from the left or right in the same 2D plane as the stickman.
- ctx.rotate(side*(.38*(1-ease)-.18*retract));
- ctx.globalAlpha=1;
- drawWeapon(equipped,side);
- ctx.restore();
-}
-for(let p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.12*dt;p.life-=dt;ctx.fillStyle=opts.coins;ctx.globalAlpha=Math.min(1,p.life/15);ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()}particles=particles.filter(p=>p.life>0);ctx.globalAlpha=1;ctx.font='bold 16px system-ui';ctx.fillStyle='#c89000';for(let f of floaters){f.y-=.65*dt;f.life-=dt;ctx.globalAlpha=Math.min(1,f.life/20);ctx.fillText(f.text,f.x-15,f.y)}floaters=floaters.filter(f=>f.life>0);ctx.restore();requestAnimationFrame(draw)}requestAnimationFrame(draw);
-$('config').onclick=()=>{$('settings').style.display='block'};$('close').onclick=()=>{$('settings').style.display='none'};const colors=$('colors');for(let [k,v] of Object.entries(defaults))colors.innerHTML+='<label>'+k+' <input type="color" id="color-'+k+'" value="'+(opts[k]||v)+'"></label>';function sync(){for(let k of ['mult','maxhp','shake'])$(k).value=opts[k];for(let k of Object.keys(defaults))$('color-'+k).value=opts[k]}sync();$('save').onclick=()=>{let old=opts.maxhp;for(let k of ['mult','maxhp','shake'])opts[k]=Math.max(k==='shake'?0:1,Number($(k).value)||1);for(let k of Object.keys(defaults))opts[k]=$('color-'+k).value;if(old!==opts.maxhp&&bossIndex===0){bosses[0][1]=opts.maxhp;hp=opts.maxhp};$('settings').style.display='none';refresh();persist()};refresh();
 </script></body></html>
